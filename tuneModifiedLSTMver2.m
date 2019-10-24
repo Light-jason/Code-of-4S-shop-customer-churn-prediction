@@ -1,8 +1,8 @@
 % data prepareation for modify RNN ver2
 tic
-data = csvread('E:\嘉文师兄论文\数据和代码\1 数据集\dataset1.csv',1);
-% 构造一步预测数据集
-t = 1; % “自回归”使用的特征个数,t=1时与dataprepare_forRNN是一样的
+data = csvread('dataset1.csv',1);
+% 鏋勯�犱竴姝ラ娴嬫暟鎹泦
+t = 1; % 鈥滆嚜鍥炲綊鈥濅娇鐢ㄧ殑鐗瑰緛涓暟,t=1鏃朵笌dataprepare_forRNN鏄竴鏍风殑
 records = data(:,1); numofrecords = length(records); 
 numofID = length(unique(data(:,2))); 
 warranty1 = data(:,4:5);warranty2 = data(:,6:50); costomer_demography = data(:,51:end); 
@@ -22,7 +22,7 @@ for i = 1:numofrecords
     end
 end
 driverID = dataset_for_RNN(:,2); dataset_for_RNN(:,2) = []; y = dataset_for_RNN(:,2);
-% 10-fold CV分组
+% 10-fold CV鍒嗙粍
 batch_size = 1536; num_of_sample=15363;
 remainder = mod(num_of_sample, batch_size);
 start = 1 : batch_size : (num_of_sample-remainder);
@@ -43,7 +43,7 @@ for k = 10
     cross_entropy(k) = final_loss; TimeConsume(k) = time_consume;
     disp(final_loss)
     auc_result_per = AUC1(y_test,y_hat);
-    disp(['已完成第',num2str(k),'次tune'])
+    disp(['宸插畬鎴愮',num2str(k),'娆une'])
 end
 
 auc_result = AUC1(y,y_pred_prob);
@@ -53,7 +53,7 @@ Pred_Actu = [y_pred_prob>threshold,y];
 PA = sum(Pred_Actu .* repmat([1 2],size(y,1),1),2);
 TN = sum(PA==0); FN = sum(PA==1); FP = sum(PA==2); TP = sum(PA==3); 
 confuse_matrix = [TP,FP;FN,TN];
-disp(['10-foldCV的错误率:',num2str(error_rate_of_TestSet)])
+disp(['10-foldCV鐨勯敊璇巼:',num2str(error_rate_of_TestSet)])
 
 RESULT_of_2StepModifiedLSTM = cell(6,1); resultLR = [y,y_pred_prob];
 RESULT_of_2StepModifiedLSTM{1} = resultLR; RESULT_of_2StepModifiedLSTM{2} = auc_result; 
