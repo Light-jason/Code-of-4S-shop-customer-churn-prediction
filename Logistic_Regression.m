@@ -1,14 +1,14 @@
 function [w,b,probs_of_positive,error_rate,final_loss,time_consume] = Logistic_Regression(x_train,y_train,x_test,y_test)
-% ÓÃBPËã·¨µÄË¼ÏëÑµÁ·¸ĞÖªÆ÷£¨ÕâÀïÊÇlogistic regression£©
+% ç”¨BPç®—æ³•çš„æ€æƒ³è®­ç»ƒæ„ŸçŸ¥å™¨ï¼ˆè¿™é‡Œæ˜¯logistic regressionï¼‰
 tic
-rng(2018) % Ã©Ò°°®ÒÂ£¬°¢ÒÌÏ´ÌúÂ·~~~
+rng(2018) 
 sigm = @(x,w,b) 1 ./ (1 + exp(-x*w - repmat(b,size(x,1),1)));
 coef = 0.1; w = coef * randn(size(x_train,2),size(y_train,2)); b = 0; 
 vw = zeros(size(w)); vb = 0;
-momentum = 0.9; lr = 0.05; num_of_epoch = 3e3; % ÉèÖÃÓÅ»¯³¬²ÎÊı
+momentum = 0.9; lr = 0.05; num_of_epoch = 3e3; % è®¾ç½®ä¼˜åŒ–è¶…å‚æ•°
 loss = zeros(num_of_epoch,1); 
-% Ğ¡ÅúÁ¿Ìİ¶ÈÏÂ½µ
-batch_size = ceil(size(y_train,1)/40); % Ä¬ÈÏÊ¹ÓÃÈ«Ìİ¶È
+% å°æ‰¹é‡æ¢¯åº¦ä¸‹é™
+batch_size = ceil(size(y_train,1)/40); % é»˜è®¤ä½¿ç”¨å…¨æ¢¯åº¦
 num_of_sample = size(x_train,1);
 remainder = mod(num_of_sample, batch_size);
 start = 1 : batch_size : (num_of_sample-remainder);
@@ -16,11 +16,11 @@ final = batch_size : batch_size : (num_of_sample-remainder);
 final(end) = final(end) + remainder;
 batch_index = [start;final]';
 for i =1:num_of_epoch
-    j = mod(i,size(batch_index,1)) + 1 ; %Ñ¡batch
+    j = mod(i,size(batch_index,1)) + 1 ; %é€‰batch
     x_batch = x_train(batch_index(j,1):batch_index(j,2),:); y_batch = y_train(batch_index(j,1):batch_index(j,2),:);
     y_pred = sigm(x_batch,w,b);
-    % dw = x' * ((y./y_pred - (1-y)./(1-y_pred)) .* y_pred .* (1-y_pred)) / size(x,1); % ÕâÊÇ²»ÎÈ¶¨µÄ£¬»á³öÏÖNaN
-    % db = mean((y./y_pred - (1-y)./(1-y_pred)) .* y_pred .* (1-y_pred), 1);           % Òò´Ë£¬²»½¨ÒéÊ¹ÓÃBPÑµÁ·LR
+    % dw = x' * ((y./y_pred - (1-y)./(1-y_pred)) .* y_pred .* (1-y_pred)) / size(x,1); % è¿™æ˜¯ä¸ç¨³å®šçš„ï¼Œä¼šå‡ºç°NaN
+    % db = mean((y./y_pred - (1-y)./(1-y_pred)) .* y_pred .* (1-y_pred), 1);           % å› æ­¤ï¼Œä¸å»ºè®®ä½¿ç”¨BPè®­ç»ƒLR
     dw = x_batch' * (y_batch - y_pred) / size(x_batch,1);
     db = mean(y_batch - y_pred, 1);
     vw = momentum*vw + lr*dw; vb = momentum*vb + lr*db;
