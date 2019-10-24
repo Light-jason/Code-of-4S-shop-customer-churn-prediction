@@ -1,9 +1,9 @@
-% LSTM for classification¶ş·ÖÀàÈÎÎñ£¨µİ¹éÉñ¾­ÍøÂç£©Ò»ĞĞ¾ÍÊÇÒ»ÌõĞòÁĞ£¬ËùÓĞĞòÁĞµÄ³¤¶È¿É²»Í¬£¬ÓÃNaNtÌî²¹¿ÕÖµ
+% LSTM for classificationäºŒåˆ†ç±»ä»»åŠ¡ï¼ˆé€’å½’ç¥ç»ç½‘ç»œï¼‰ä¸€è¡Œå°±æ˜¯ä¸€æ¡åºåˆ—ï¼Œæ‰€æœ‰åºåˆ—çš„é•¿åº¦å¯ä¸åŒï¼Œç”¨NaNtå¡«è¡¥ç©ºå€¼
 function [Weights_of_LSTMunits,Weights_of_output,y_hat,error_rate_of_test,final_loss,time_consume] = modified_LSTMver2(seq_train,y_train,struc,seq_test,y_test,opts)
-% Weights_of_LSTMunitsÊÇ½á¹¹Ìå£¬°üº¬ÒÅÍüÃÅ¡¢ÊäÈëÃÅ¡¢Êä³öÃÅµÄ¡°ËùÓĞ¡±²ÎÊı£¬Ò²¾ÍÊÇÊäÈë²ãµ½Òş²ãÖ®¼äµÄ²ÎÊı
-% ÀıÈç£¬Weights_of_LSTMunits.forget_gateÊÇ(nx+nh+1)¡ÁnhµÄ¾ØÕó£¬ÒÀ´ÎÏÂÀ´¶ÔÓ¦µÄ²ÎÊıÊÇ[Ui; Wi; bi]
+% Weights_of_LSTMunitsæ˜¯ç»“æ„ä½“ï¼ŒåŒ…å«é—å¿˜é—¨ã€è¾“å…¥é—¨ã€è¾“å‡ºé—¨çš„â€œæ‰€æœ‰â€å‚æ•°ï¼Œä¹Ÿå°±æ˜¯è¾“å…¥å±‚åˆ°éšå±‚ä¹‹é—´çš„å‚æ•°
+% ä¾‹å¦‚ï¼ŒWeights_of_LSTMunits.forget_gateæ˜¯(nx+nh+1)Ã—nhçš„çŸ©é˜µï¼Œä¾æ¬¡ä¸‹æ¥å¯¹åº”çš„å‚æ•°æ˜¯[Ui; Wi; bi]
 tic
-rng(2018) % ÛÒÂ¤Á¤ã¤ó´ó„ÙÀû
+rng(2018) 
 nx1 = struc(1); nx2 = struc(2); nh = struc(3); 
 x_train = seq_train(:,2:end); record_train = seq_train(:,1); 
 warr_train = x_train(:,1:nx1); cust_train = x_train(:,end-nx2+1:end);
@@ -14,31 +14,31 @@ if(nargin == 5)
     opts.epoch = 3e3; 
     opts.learning_rate = 0.05; 
     opts.momentum = 0.9; 
-    opts.training_object = 1e-2;     % ÉèÖÃÑµÁ·Ä¿±ê
+    opts.training_object = 1e-2;     % è®¾ç½®è®­ç»ƒç›®æ ‡
     opts.batch_size = ceil(size(y_train,1)/40);
     opts.T = 9;
 end
 epoch = opts.epoch; lr = opts.learning_rate; momentum = opts.momentum; 
 training_object = opts.training_object; batch_size = opts.batch_size;  T = opts.T;
-% ²ÎÊı³õÊ¼»¯
+% å‚æ•°åˆå§‹åŒ–
 coef = 0.1; coef_biase = 1;
-W_i = [coef*randn(nx1+nh,nh); -coef_biase*rand(1,nh)]; W_a = [coef*randn(nx1+nh,nh); -coef_biase*rand(1,nh)]; % ÊäÈëÃÅ£¬Êä³öÃÅbiaseÓÃ¸ºÊı³õÊ¼»¯
-W_o = [coef*randn(nx1+nh,nh); -coef_biase*rand(1,nh)]; W_f = [coef*randn(nx1+nh,nh); coef_biase*rand(1,nh)];  % ÒÅÍüÃÅbiaseÓÃÕıÊı³õÊ¼»¯
+W_i = [coef*randn(nx1+nh,nh); -coef_biase*rand(1,nh)]; W_a = [coef*randn(nx1+nh,nh); -coef_biase*rand(1,nh)]; % è¾“å…¥é—¨ï¼Œè¾“å‡ºé—¨biaseç”¨è´Ÿæ•°åˆå§‹åŒ–
+W_o = [coef*randn(nx1+nh,nh); -coef_biase*rand(1,nh)]; W_f = [coef*randn(nx1+nh,nh); coef_biase*rand(1,nh)];  % é—å¿˜é—¨biaseç”¨æ­£æ•°åˆå§‹åŒ–
 W_y = [coef * randn(nh+nx2,ny); zeros(1,ny)]; 
-% ¶¯Á¿Ïî³õÊ¼»¯
+% åŠ¨é‡é¡¹åˆå§‹åŒ–
 vW_i = zeros(nx1+nh+1,nh); vW_a = zeros(nx1+nh+1,nh); vW_o = zeros(nx1+nh+1,nh); vW_f = zeros(nx1+nh+1,nh); 
 vW_y = zeros(nh+nx2+1,ny); 
 
-% ÑµÁ·: Ç°Ïò´«²¥ -> ºóÏò´«²¥ -> ¸üĞÂÌİ¶È/¶¯Á¿ -> ¸üĞÂ²ÎÊı¼°Ñ§Ï°ÂÊ -> ¸üĞÂloss²¢µ÷ÕûÑ§Ï°ÂÊ
+% è®­ç»ƒ: å‰å‘ä¼ æ’­ -> åå‘ä¼ æ’­ -> æ›´æ–°æ¢¯åº¦/åŠ¨é‡ -> æ›´æ–°å‚æ•°åŠå­¦ä¹ ç‡ -> æ›´æ–°losså¹¶è°ƒæ•´å­¦ä¹ ç‡
 remainder = mod(num_of_sample, batch_size);
 start = 1 : batch_size : (num_of_sample-remainder);
 final = batch_size : batch_size : (num_of_sample-remainder);
 final(end) = final(end) + remainder;
 batch_index = [start;final]'; 
 loss = zeros(epoch,1); 
-h0 = zeros(1,nh); c0 = zeros(1,nh); % ÉèÖÃ³õÊ¼Ï¸°û×´Ì¬Îª0
+h0 = zeros(1,nh); c0 = zeros(1,nh); % è®¾ç½®åˆå§‹ç»†èƒçŠ¶æ€ä¸º0
 for i = 1 : epoch
-    j = mod(i,size(batch_index,1)) + 1 ; %Ñ¡batch
+    j = mod(i,size(batch_index,1)) + 1 ; %é€‰batch
     dW_y = 0; dW_o = 0; dW_f = 0; dW_i = 0; dW_a = 0; 
     for n = batch_index(j,1):batch_index(j,2)
         seq_len = min([record_train(n)-2,T]) + 1;
@@ -47,7 +47,7 @@ for i = 1 : epoch
         hidden = [h0; zeros(seq_len,nh)]; cell_state = [c0; zeros(seq_len,nh)];
         input_i = zeros(seq_len,nh); input_a = input_i; 
         forget = input_i; output = input_i; 
-        % Ç°Ïò´«²¥
+        % å‰å‘ä¼ æ’­
         for k = 1:seq_len
             x_n_k_ = [x_n(k,:) hidden(k,:) 1];
             input_i(k,:) = sigm(x_n_k_ * W_i); input_a(k,:) = 2*tanh(x_n_k_ * W_a);
@@ -58,7 +58,7 @@ for i = 1 : epoch
         h_n_end_ = [hidden(end,:),cust_train(n,:),1];
         y_hat = sigm(h_n_end_*W_y);
         
-        % ºóÏò´«²¥(BPTT)£ºPart1¸üĞÂVÓëW_o(usual BP); Part2¸üĞÂW_i£¬W_f£¬W_a ( truncation RTRL)
+        % åå‘ä¼ æ’­(BPTT)ï¼šPart1æ›´æ–°Vä¸W_o(usual BP); Part2æ›´æ–°W_iï¼ŒW_fï¼ŒW_a ( truncation RTRL)
         % Part 1: usual BP
         grad_W_y = h_n_end_' * (y_hat - y_n);
         delta_Eo = (y_hat - y_n) * W_y(1:nh,:)' .* tanh(cell_state(end,:)) .* (output(end,:).*(1-output(end,:)));
@@ -66,7 +66,7 @@ for i = 1 : epoch
         % Part 2: RTRL
         delta_Ec = (y_hat - y_n) * W_y(1:nh,:)' .* output(end,:) .* (1 - tanh(cell_state(end,:)).^2);
         delta_cW_f = zeros(nx1+nh+1,nh); delta_cW_i = zeros(nx1+nh+1,nh); delta_cW_a = zeros(nx1+nh+1,nh);
-        for k = 1:seq_len   % µİ¹é¼ÆËãdelta_cW
+        for k = 1:seq_len   % é€’å½’è®¡ç®—delta_cW
             x_n_k_ = [x_n(k,:) hidden(k,:) 1];
             delta_cW_f = x_n_k_' * (cell_state(k,:) .* forget(k,:) .* (1-forget(k,:))) + delta_cW_f * diag(forget(k,:));
             delta_cW_i = x_n_k_' * (input_a(k,:) .* input_i(k,:) .* (1 - input_i(k,:)))+ delta_cW_i * diag(forget(k,:));
@@ -77,7 +77,7 @@ for i = 1 : epoch
         dW_y = dW_y + grad_W_y; dW_o = dW_o + grad_W_o;
         dW_f = dW_f + grad_W_f; dW_i = dW_i + grad_W_i; dW_a = dW_a + grad_W_a;
     end
-    % ¸üĞÂ²ÎÊı
+    % æ›´æ–°å‚æ•°
     dW_y = dW_y / batch_size; dW_o = dW_o / batch_size; 
     dW_f = dW_f / batch_size; dW_i = dW_i / batch_size; dW_a = dW_a / batch_size; 
     
@@ -87,15 +87,15 @@ for i = 1 : epoch
     W_y = W_y + vW_y; W_o = W_o + vW_o; 
     W_f = W_f + vW_f; W_i = W_i + vW_i; W_a = W_a + vW_a; 
 
-    % ¼ÆËãloss
+    % è®¡ç®—loss
 %     loss(i) = predict(warr_train,cust_train,record_train,y_train,nh,W_f,W_i,W_a,W_o,W_y,T);
-%     if(loss(i) <= training_object); break; end % ´ïµ½ÑµÁ·Ä¿±ê£¬Í£Ö¹µü´ú
+%     if(loss(i) <= training_object); break; end % è¾¾åˆ°è®­ç»ƒç›®æ ‡ï¼Œåœæ­¢è¿­ä»£
 %     if(i > 1)
 %         diff_loss = loss(i-1) - loss(i);
 %         if(diff_loss < -1e-3); lr = lr * 0.7; a = lr<0.01; lr = 0.01*a + (1-a)*lr; end
 %         if(0<diff_loss && diff_loss<1e-2); lr = lr * 1.05; b = lr>0.9; lr = 0.9*b + (1-b)*lr; end
 %     end
-    if(mod(i,300)==0); disp(['ÒÑÍê³É',num2str(i),'´Îµü´ú']); end
+    if(mod(i,300)==0); disp(['å·²å®Œæˆ',num2str(i),'æ¬¡è¿­ä»£']); end
 end
 
 % plot(loss(1:i))
