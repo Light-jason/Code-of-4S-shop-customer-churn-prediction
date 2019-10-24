@@ -1,5 +1,5 @@
-% RNN for ¶ş·ÖÀàÈÎÎñ£¨µİ¹éÉñ¾­ÍøÂç£©
-% modifyRNN_for_4Sver2µÄÊı¾İ¼¯È¥µôÁËrecord=1
+% RNN for äºŒåˆ†ç±»ä»»åŠ¡ï¼ˆé€’å½’ç¥ç»ç½‘ç»œï¼‰% RNN for classification
+% modifyRNN_for_4Sver2çš„æ•°æ®é›†å»æ‰äº†record=1
 function [weights,y_hat,error_rate,final_loss,time_consume] = modifyRNN_for_4Sver2(seq_train,y_train,struc,seq_test,y_test,opts)
 tic
 rng(2018)
@@ -13,22 +13,24 @@ if(nargin == 5)
     opts.epoch = 3e3; 
     opts.learning_rate = 0.05; 
     opts.momentum = 0.9; 
-    opts.training_object = 1e-2;     % ÉèÖÃÑµÁ·Ä¿±ê
+    opts.training_object = 1e-2;     % è®¾ç½®è®­ç»ƒç›®æ ‡ % set the train object
     opts.batch_size = ceil(size(y_train,1)/40); 
-    opts.T = 9;   % ÕâÀïµÄTÊÇÏòÉÏÈ¡ÌØÕ÷µÄ×î´ó¸öÊı,Ïàµ±ÓÚRNN_for_4SÖĞT=4µÄÇéĞÎ
+    opts.T = 9;   % è¿™é‡Œçš„Tæ˜¯å‘ä¸Šå–ç‰¹å¾çš„æœ€å¤§ä¸ªæ•°,ç›¸å½“äºRNN_for_4Sä¸­T=4çš„æƒ…å½¢
+                  % â€˜Tâ€™ represents the max number of historical warranty features 
 end
 if(nargin == 3); num_of_hid = ceil((num_of_input1 + num_of_output)/2); end
 epoch = opts.epoch; lr = opts.learning_rate; momentum = opts.momentum; 
 training_object = opts.training_object; batch_size = opts.batch_size; T = opts.T;
-% È¨ÖØ³õÊ¼»¯
+% æƒé‡åˆå§‹åŒ– % initialize the weight
 coeff = 0.1;
 U = coeff * randn(num_of_input1,num_of_hid); W = coeff * randn(num_of_hid); b_h = zeros(1,num_of_hid); 
 V = coeff * randn(num_of_hid+num_of_input2,num_of_output); b_y = zeros(1,num_of_output); 
-% ¶¯Á¿Ïî³õÊ¼»¯Îª0
+% åŠ¨é‡é¡¹åˆå§‹åŒ–ä¸º0 
 vU = zeros(size(U)); vW = zeros(size(W)); vb_h = zeros(size(b_h)); 
 vV = zeros(size(V)); vb_y = zeros(size(b_y));   
 
-% ÑµÁ·: Ç°Ïò´«²¥ -> ºóÏò´«²¥ -> ¸üĞÂÌİ¶È/¶¯Á¿ -> ¸üĞÂ²ÎÊı¼°Ñ§Ï°ÂÊ -> ¸üĞÂloss²¢µ÷ÕûÑ§Ï°ÂÊ
+% è®­ç»ƒ: å‰å‘ä¼ æ’­ -> åå‘ä¼ æ’­ -> æ›´æ–°æ¢¯åº¦/åŠ¨é‡ -> æ›´æ–°å‚æ•°åŠå­¦ä¹ ç‡ -> æ›´æ–°losså¹¶è°ƒæ•´å­¦ä¹ ç‡
+% train: Forward propagation-> Backward propagation-> update gradient -> update parameters and learning rate ->  update loss
 remainder = mod(num_of_sample, batch_size);
 start = 1 : batch_size : (num_of_sample-remainder);
 final = batch_size : batch_size : (num_of_sample-remainder);
@@ -36,14 +38,14 @@ final(end) = final(end) + remainder;
 batch_index = [start;final]'; 
 loss = zeros(epoch,1); h0 = sigm(0*b_h);
 for i = 1 : epoch
-    j = mod(i,size(batch_index,1)) + 1 ; %Ñ¡batch
+    j = mod(i,size(batch_index,1)) + 1 ; %choose batch
     dV = 0; db_h = 0; dW = 0; dU = 0; db_y = 0; 
     for n = batch_index(j,1):batch_index(j,2)
         seq_len = min([record_train(n)-2,T]) + 1;
         x_n = warr_train(n-seq_len+1:n,:); 
         y_n = y_train(n,1);
         h_n = zeros(seq_len,num_of_hid); 
-        % Ç°Ïò´«²¥
+        % å‰å‘ä¼ æ’­ %Forward propagation
         for k = 1:seq_len
             x_n_k = x_n(k,:);
             if(k==1); h_n_k = sigm(x_n_k*U + h0*W + b_h); h_h_k1 = h_n_k; else; h_n_k = sigm(x_n_k*U + h_h_k1*W + b_h); h_h_k1 = h_n_k;end
@@ -52,7 +54,7 @@ for i = 1 : epoch
         h_n_end = h_n(end,:); hidden = [h_n_end,cust_train(n,:)];
         y_hat = sigm(hidden*V + b_y);
         
-        % ºóÏò´«²¥(BPTT)
+        % åå‘ä¼ æ’­(BPTT)
         grad_V = hidden' * (y_hat - y_n); grad_b_y = y_hat - y_n;
         grad_W = 0; grad_U = 0; grad_b_h = 0;
         delta_k = (y_hat - y_n)*V(1:num_of_hid,:)' .* h_n_end .* (1-h_n_end);
@@ -64,28 +66,28 @@ for i = 1 : epoch
         end
         dV = dV + grad_V; db_y = db_y + grad_b_y;
         dW = dW + grad_W; dU = dU + grad_U; db_h = db_h + grad_b_h;
-        % ÕâÀï¿ÉÉèÖÃthreshold£¬ÒÔ·ÀÌİ¶È±¬Õ¨
+        % è¿™é‡Œå¯è®¾ç½®thresholdï¼Œä»¥é˜²æ¢¯åº¦çˆ†ç‚¸
     end
-    % ¸üĞÂ²ÎÊı
+    % æ›´æ–°å‚æ•° %update parameters
     dV = dV / batch_size; db_y = db_y / batch_size;
     dW = dW / batch_size; dU = dU / batch_size; db_h = db_h / batch_size;
     
     vV = momentum * vV - lr * dV; vb_y = momentum * vb_y - lr * db_y;
     vW = momentum * vW - lr * dW; vU = momentum * vU - lr * dU; vb_h = momentum * vb_h - lr * db_h;
     V = V + vV; b_y = b_y + vb_y; W = W + vW; U = U + vU; b_h = b_h + vb_h;
-    % ¼ÆËãloss
+    % calculate loss
 %     loss(i) = cross_entropy(warr_train,cust_train,record_train,y_train,U,W,b_h,V,b_y,T);
-%     if(loss(i) <= training_object); break; end % ´ïµ½ÑµÁ·Ä¿±ê£¬Í£Ö¹µü´ú
+%     if(loss(i) <= training_object); break; end % è¾¾åˆ°è®­ç»ƒç›®æ ‡ï¼Œåœæ­¢è¿­ä»£
 %     if(i > 1)
 %         diff_loss = loss(i-1) - loss(i);
 %         if(diff_loss < -1e-3); lr = lr * 0.7; a = lr<0.01; lr = 0.01*a + (1-a)*lr; end
 %         if(0<diff_loss && diff_loss<1e-2); lr = lr * 1.05; b = lr>0.9; lr = 0.9*b + (1-b)*lr; end
 %     end
-    if(mod(i,300)==0); disp(['ÒÑÍê³É',num2str(i),'´Îµü´ú']);end
+    if(mod(i,300)==0); disp(['å·²å®Œæˆ',num2str(i),'æ¬¡è¿­ä»£']);end
 end
 
 % plot(loss(1:i))
-if(loss(i) > training_object);warning('Î´´ïµ½ÑµÁ·Ä¿±ê£»½¨ÒéÉèÖÃ¸ü´óµÄ²½Êı,»ò¸ü¸ÄÓÅ»¯²ÎÊı,»òµ÷Ğ¡ÑµÁ·Ä¿±ê¡£');end 
+if(loss(i) > training_object);warning('æœªè¾¾åˆ°è®­ç»ƒç›®æ ‡ï¼›å»ºè®®è®¾ç½®æ›´å¤§çš„æ­¥æ•°,æˆ–æ›´æ”¹ä¼˜åŒ–å‚æ•°,æˆ–è°ƒå°è®­ç»ƒç›®æ ‡ã€‚');end 
 [final_loss,y_hat] = cross_entropy(warr_test,cust_test,record_test,y_test,U,W,b_h,V,b_y,T);
 act_y_test = y_test(record_test~=1);
 error_rate = sum(abs((y_hat>0.5)-act_y_test)) / size(act_y_test,1);
@@ -100,11 +102,11 @@ h0 = sigm(0*b_h);
 y_hat = zeros(size(y_train,1)-sum(record_train==1),1); 
 act_y_train = y_train(record_train~=1);
 i = 1;
-% Ç°Ïò´«²¥
+% å‰å‘ä¼ æ’­
 for n = 1:size(y_train,1)
     seq_len = min([record_train(n)-2,T]) + 1;
     x_n = warr_train(n-seq_len+1:n,:); 
-    % Ç°Ïò´«²¥
+    % å‰å‘ä¼ æ’­
     for k = 1:seq_len
         x_n_k = x_n(k,:);
         if(k==1); h_n_k = sigm(x_n_k*U + h0*W + b_h); h_h_k1 = h_n_k; else; h_n_k = sigm(x_n_k*U + h_h_k1*W + b_h); h_h_k1 = h_n_k;end
