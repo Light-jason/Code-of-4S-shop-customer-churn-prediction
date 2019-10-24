@@ -17,4 +17,3 @@ text(0.5,0.5,['AUC = ',sim2str(vpa(auc_result,3))])
 end
 
 
-
