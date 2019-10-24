@@ -1,9 +1,9 @@
 tic
 % data preparation for logistic regression & SVM
-data = csvread('C:\Users\Administrator\Desktop\20180329常州常雪\1 数据集\dataset1.csv',1);
+data = csvread('dataset1.csv',1);
 recordID = data(:,1:2); driverID = recordID(recordID(:,1)~=1,2);
-    % 构造一步预测数据集
-t = 1; % “自回归”使用的特征个数
+    % 鏋勯�犱竴姝ラ娴嬫暟鎹泦
+t = 1; % 鈥滆嚜鍥炲綊鈥濅娇鐢ㄧ殑鐗瑰緛涓暟
 records = data(:,1); numofrecords = length(records); 
 numofID = length(unique(data(:,2))); 
 warranty1 = data(:,4:5);warranty2 = data(:,6:50); costomer_demography = data(:,51:end); 
@@ -24,7 +24,7 @@ for i = 1:numofrecords
 end
 y = dataset_for_LR(:,2); x = dataset_for_LR(:,3:end); 
 
-% 10-fold CV分组
+% 10-fold CV鍒嗙粍
 batch_size = 1536; num_of_sample=15363;
 remainder = mod(num_of_sample, batch_size);
 start = 1 : batch_size : (num_of_sample-remainder);
@@ -41,10 +41,10 @@ for k = 1:10
     y_pred_prob = [y_pred_prob; probs_of_positive]; 
     cross_entropy(k) = final_loss; TimeConsume(k) = time_consume; 
     disp(final_loss)
-    disp(['已完成第',num2str(k),'次tune'])
+    disp(['宸插畬鎴愮',num2str(k),'娆une'])
 end
 
-% 测试结果
+% 娴嬭瘯缁撴灉
 auc_result = AUC1(y,y_pred_prob);
 threshold = 0.81;
 error_rate_of_TestSet = sum(abs((y_pred_prob>threshold)-y)) / size(y,1);
@@ -52,7 +52,7 @@ Pred_Actu = [y_pred_prob>threshold,y];
 PA = sum(Pred_Actu .* repmat([1 2],size(y,1),1),2);
 TN = sum(PA==0); FN = sum(PA==1); FP = sum(PA==2); TP = sum(PA==3); 
 confuse_matrix = [TP,FP;FN,TN];
-disp(['10-foldCV的错误率:',num2str(error_rate_of_TestSet)])
+disp(['10-foldCV鐨勯敊璇巼:',num2str(error_rate_of_TestSet)])
 
 RESULT_of_LR = cell(4,1); resultLR = [y,y_pred_prob];
 RESULT_of_LR{1} = resultLR; RESULT_of_LR{2} = auc_result; 
